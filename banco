@@ -1,0 +1,1585 @@
+#include<stdio.h>
+#include<windows.h>
+#include<locale.h>				//LIBRERIAS USADAS PARA EL PROYECTO
+#include<conio.h>
+#include<stdbool.h>
+#include<ctype.h>
+#include<time.h>
+#include<string.h>
+#include<stdlib.h>
+
+struct Cliente{
+	int ID;
+	char nombre[40];			//ESTRUCTURA DE USUARIO
+	int  edad;
+	char contrasena[20];
+};
+
+struct Cliente cliente;
+struct Cliente *puntero_cliente=&cliente;		//DECLARAR UN OBJETO DE ESTRUCTURA USUARIO
+
+
+struct Cuenta{
+	long numero_tarjeta_credito;					//ESTRUCTURA DE CUENTA
+	float cantidad;
+	float adeudo;
+	float maximo_credito;
+};
+
+struct Cuenta cuenta;
+struct Cuenta *puntero_cuenta=&cuenta;		//DELCARCION DE OBJETO DE ESTRUCTURA CUENTA
+
+
+struct Datos_Recibidos{
+	char nombre_TDC[40];
+	long numero_TDC;
+	float saldo_TDC;
+	float adeudo_TDC;
+};
+
+struct Datos_Recibidos datos_usuario_tdc;
+struct Datos_Recibidos *puntero_tdc=&datos_usuario_tdc;
+
+int datos_usuario(); 
+int menu_principal();
+int menu_clientes();
+void registrar_compra();
+void registrar_deposito();
+void valor_deposito(long);
+void valor_compra(long);
+void ver_saldo_tdc();
+void tabla_tdc(int,int);
+
+void gotoxy(int,int);
+void dibujar_tabla();		//PROTOTIPO DE FUNCIONES 
+void menu_opciones();
+void verificacion();
+
+void menu_administrativo();
+void registrar_cliente();
+void registrar_cuenta();			//PROTOTIPOS DE FUNCIONES
+void ver_clientes();
+void ver_cuentas();
+void generador_archivo_cuenta();
+void generador_archivo_contraycuenta();
+
+void menu_cliente();
+void dibujar_tabla_cuentas();
+
+
+float compra_liverpool(float);
+float compra_home_depot(float);
+float compra_apple(float);
+float compra_nutrisa(float);
+float meses_si(float,int,float);
+
+
+
+
+int valor_y_global;				//DECLARACION DE FUNCIONES GLOBALES
+int valor_x_global;
+char nombre[40];
+
+
+int main(int argc, char const *argv[]){
+	setlocale(LC_ALL,"es_ES");		//Lee los caracteres especiales como acentos
+	int opcion_principal;
+	do{
+		system("cls");		//limpirar pantalla
+		opcion_principal=menu_principal();		//llama a la funcion menu principal
+		menu_opciones(opcion_principal);		//llama a la funcion menu opciones
+	}while(opcion_principal!=3);				//terminara el bucle hasta que la salida sea 3
+
+	return 0;									//finaliza el programa
+
+}
+
+int menu_principal(){				//funcion menu principal
+	int opcion;
+	printf("\tSistema Bancario\n\n");
+	printf("1-Administrativo\n");
+	printf("2-Cliente\n");					//imprime en pantalla el menu que se usara en el sistema bancario
+	printf("3-Salir\n");
+	printf("Ingresa una opción:");
+	scanf("%d",&opcion);
+	return opcion;
+}
+
+void menu_opciones(int opcion_principal){		//funcion menu opciones
+	switch(opcion_principal){		//multi opciones dependiendo el caso escogido
+		case 1:
+			menu_administrativo();		//llama a la funcion menu administrativo
+			break;						
+		case 2:
+			menu_cliente();				//llama a la funcion menu cliente
+			break;
+		case 3:
+			break;					//no hace nada solo genera la opcion 3
+		default:
+			printf("\nOpción incorrecta..!!\n");		//impresion por defecto en caso de no escoger ninguna opcion anterior
+			system("pause");				//genera una espera junto con un mensaje,hasta presionar una tecla
+			break;
+	}
+}
+
+void menu_cliente(){
+	int opcion_cliente=0;
+	verificacion();
+	do{
+		opcion_cliente=menu_clientes();
+	}while(opcion_cliente!=5);
+
+}
+
+
+void verificacion(){
+	bool comprobando=false;
+	char extraer[25];
+	char completo[25];
+	
+	do{
+		fflush(stdin);
+		system("cls");
+		printf("\t\tVentana de usuario . . .\n\n");
+		printf("Ingresa tu numero de cuenta:");
+		scanf("%ld",&puntero_cuenta->numero_tarjeta_credito);
+		
+		printf("Ingresa tu contraseña:");
+		scanf("%s",&puntero_cliente->contrasena);
+
+		
+
+		strtok(puntero_cliente->contrasena,"\n");  //quita
+		strcpy(completo,puntero_cliente->contrasena); //copia
+
+
+		printf("\nCONTRASEÑA:%s\n",completo);
+		printf("TARJETA:%ld\n",puntero_cuenta->numero_tarjeta_credito);		
+
+		FILE *arhivo_cliente;
+		arhivo_cliente=fopen("Contraseñas.txt","r");
+		if(arhivo_cliente==NULL){
+			printf("Estamos teniendo problemas de sistema . . .\n");		//manda msj de error en caso de que hubiera fallo alguno
+			printf("Intentar mas tarde . .\n");
+			system("pause");
+			exit(1);
+		}
+		do{
+			fgets(extraer,25,arhivo_cliente);
+			if(strstr(extraer,completo)!=NULL){
+				comprobando=true;
+				break;
+			}
+			else{
+				comprobando=false;
+			}
+		}while(!feof(arhivo_cliente));
+
+		fclose(arhivo_cliente);
+		
+		if(comprobando==true){
+			printf("\nUSUARIO CORRECTO . . .\n");
+			system("pause");
+		}
+		else{
+			printf("\nUSUARIO ERRONEO . . .\n");
+			printf("VUELVE A INTENTARLO\n");
+			system("pause");
+			comprobando=false;
+		}
+	}while(comprobando==false);
+}
+
+int  menu_clientes(){
+	int opcion_cuenta_cliente=0;
+	bool identidad=false;
+	char extraer[45];
+	int contador=1;
+	system("cls");
+	if(contador==1){	
+		while(identidad==false){
+			fflush(stdin);
+			printf("Queremos comprobar tú identidad\n");
+			printf("Ingresa tú nombre completo:");
+			fgets(nombre,45,stdin);
+			strtok(nombre,"\n");
+			strcat(nombre,".txt");
+			FILE *archivo;
+			archivo=fopen(nombre,"a+");
+			if(archivo==NULL){
+				printf("Estamos teniendo problemas de sistema . . .\n");
+				printf("Intentar mas tarde . .\n");
+				system("pause");
+				exit(1);	
+			}
+			strtok(nombre,".txt");
+			while(!feof(archivo)){
+				fgets(extraer,45,archivo);
+				strtok(extraer,"\n");
+				if(strcmp(nombre,extraer)==0){
+					identidad=true;
+					break;	
+				}
+			}
+			fclose(archivo);
+		}
+	}
+	contador=2;
+	do{	
+		system("cls");
+		printf("\t\tBienvenido:%s\n",nombre);
+		printf("1-Registrar un deposito\n");
+		printf("2-Registrar una compra\n");
+		printf("3-Ver saldo en tú TDC\n");
+		printf("5-Salir\n");
+		printf("Ingresa una opción:");
+		scanf("%d",&opcion_cuenta_cliente);
+
+		switch(opcion_cuenta_cliente){
+		case 1:
+			registrar_deposito();
+			break;
+		case 2:
+			registrar_compra();
+			break;
+		case 3:
+			ver_saldo_tdc();
+			break;
+		case 5:
+			contador=2;
+			identidad=true;
+			break;
+		default:
+			printf("Opción no establecida\n");
+			printf("Intenta de nuevo . . .");
+			system("pause");
+			break;
+		}
+	}while(opcion_cuenta_cliente!=5);
+	return 5;
+}
+
+void registrar_deposito(){
+	bool cuenta_tdc=false;
+	long numero_tarjeta;
+	char nombre_detectar;
+	char nombre_archivo[45];
+	char *token;
+	char traer_cadena[45];
+	int contador=1;
+	int guardar=1;
+	int deposito_realizado=1;
+	int primera_vez=1;
+
+
+	system("cls");
+	strcpy(nombre_archivo,nombre);
+	strcat(nombre_archivo,".txt");
+
+	FILE *archivo_copiar;
+	archivo_copiar=fopen(nombre_archivo,"r");
+	if(archivo_copiar==NULL){
+		printf("ERROR . . .\n");
+		system("pause");
+		exit(1);
+	}
+	printf("Ingresa la cuenta a la que se realizara el deposito:");
+	scanf("%ld",&numero_tarjeta);
+
+	while(!feof(archivo_copiar)){
+		if(primera_vez==1){
+			fgets(traer_cadena,45,archivo_copiar);
+			token=strtok(traer_cadena,"$");
+			primera_vez++;	
+		}
+		while(token){
+			if(contador==1){
+				strcpy(puntero_tdc->nombre_TDC,token);
+				contador++;
+			}
+			else if(guardar==1&&contador!=1){
+				puntero_tdc->numero_TDC=atoi(token);
+				guardar++;
+			}
+			else if(guardar==2&&contador!=1){
+				puntero_tdc->saldo_TDC=atof(token);
+				guardar++;
+			}
+			else if(guardar==3&&contador!=1){
+				puntero_tdc->adeudo_TDC=atof(token);
+				guardar++;
+			}
+			token= strtok(NULL,"$");
+		}
+		guardar=1;
+		if(puntero_tdc->numero_TDC==numero_tarjeta&&deposito_realizado==1){
+				valor_deposito(numero_tarjeta);
+				deposito_realizado++;
+		}
+
+		if(!feof(archivo_copiar)){
+			FILE *archivo_sustituto;
+			archivo_sustituto=fopen("temporal.txt","a");
+			if(archivo_sustituto==NULL){
+				printf("ERROR . .  .\n");
+				system("pause");
+				exit(1);
+			}
+			else{
+				fseek(archivo_sustituto,0,SEEK_END);
+				if(ftell(archivo_sustituto)==0){
+					fprintf(archivo_sustituto,"%s",puntero_tdc->nombre_TDC);
+				}
+
+				if(!feof(archivo_sustituto)&&puntero_tdc->numero_TDC>0){
+					fprintf(archivo_sustituto,"%ld$",puntero_tdc->numero_TDC);
+					fprintf(archivo_sustituto,"%.2f$",puntero_tdc->saldo_TDC);
+					fprintf(archivo_sustituto,"%.2f\n",puntero_tdc->adeudo_TDC);
+				}
+
+				fclose(archivo_sustituto);
+			}
+		}		
+		fgets(traer_cadena,45,archivo_copiar);
+		token=strtok(traer_cadena,"$");
+	}
+	contador=1;
+	deposito_realizado=1;
+	primera_vez=1;	
+	fclose(archivo_copiar);
+	remove(nombre_archivo);
+	rename("temporal.txt",nombre_archivo);
+	
+	printf("Gracias por tú deposito . . .\n");
+	printf("Vuleve pronto . . .\n");
+	system("pause");
+	exit(EXIT_SUCCESS);
+}
+
+void valor_deposito(long _numero_tarjeta){
+	float saldo=0.00;
+	float depositar;
+	float temporal;
+	system("cls");
+	temporal=puntero_tdc->adeudo_TDC;
+	printf("\n\nNombre:%s",puntero_tdc->nombre_TDC);
+	printf("\nTarjeta:%ld",puntero_tdc->numero_TDC);
+	printf("\nSaldo:%.2f",puntero_tdc->saldo_TDC);
+	printf("\nAdeudo:%.2f",puntero_tdc->adeudo_TDC);
+		
+	if(temporal==saldo){
+		printf("\nNo debes dinero en esta tarjeta . . .\n");
+		system("\npause");
+
+	}
+	else if(temporal>saldo){
+		printf("\nMonto a liquidar:%.2f\n",puntero_tdc->adeudo_TDC);
+		printf("Ingresa la cantidad a depositar(agrega 2 decimales):");
+		scanf("%f",&depositar);
+		temporal=temporal-depositar;
+		if(temporal==saldo){
+			printf("\nYa no tienes adeudo en esta tarjeta . .\n");
+		}
+		else{
+			printf("\nTu adeudo queda de:%.2f\n",temporal);
+		}
+		puntero_tdc->adeudo_TDC=temporal;
+		printf("\nAdeudo actualizado . . .\n");
+		system("pause");
+		
+	}	
+}
+
+
+
+void registrar_compra(){
+	bool cuenta_tdc=false;
+	long numero_tarjeta;
+	char nombre_detectar;
+	char nombre_archivo[45];
+	char *token;
+	char traer_cadena[45];
+	int contador=1;
+	int guardar=1;
+	int compra_realizado=1;
+	int primera_vez=1;
+
+
+	system("cls");
+	strcpy(nombre_archivo,nombre);
+	strcat(nombre_archivo,".txt");
+
+	FILE *archivo_copiar;
+	archivo_copiar=fopen(nombre_archivo,"r");
+	if(archivo_copiar==NULL){
+		printf("ERROR . . .\n");
+		system("pause");
+		exit(1);
+	}
+	printf("Ingresa la cuenta con la que compraras:");
+	scanf("%ld",&numero_tarjeta);
+
+	while(!feof(archivo_copiar)){
+		if(primera_vez==1){
+			fgets(traer_cadena,45,archivo_copiar);
+			token=strtok(traer_cadena,"$");
+			primera_vez++;	
+		}
+		while(token){
+			if(contador==1){
+				strcpy(puntero_tdc->nombre_TDC,token);
+				contador++;
+			}
+			else if(guardar==1&&contador!=1){
+				puntero_tdc->numero_TDC=atoi(token);
+				guardar++;
+			}
+			else if(guardar==2&&contador!=1){
+				puntero_tdc->saldo_TDC=atof(token);
+				guardar++;
+			}
+			else if(guardar==3&&contador!=1){
+				puntero_tdc->adeudo_TDC=atof(token);
+				guardar++;
+			}
+			token= strtok(NULL,"$");
+		}
+		guardar=1;
+		if(puntero_tdc->numero_TDC==numero_tarjeta&&compra_realizado==1){
+				valor_compra(numero_tarjeta);
+				compra_realizado++;
+		}
+
+		if(!feof(archivo_copiar)){
+			FILE *archivo_sustituto;
+			archivo_sustituto=fopen("temporal.txt","a");
+			if(archivo_sustituto==NULL){
+				printf("ERROR . .  .\n");
+				system("pause");
+				exit(1);
+			}
+			else{
+				fseek(archivo_sustituto,0,SEEK_END);
+				if(ftell(archivo_sustituto)==0){
+					fprintf(archivo_sustituto,"%s",puntero_tdc->nombre_TDC);
+				}
+
+				if(!feof(archivo_sustituto)&&puntero_tdc->numero_TDC>0){
+					fprintf(archivo_sustituto,"%ld$",puntero_tdc->numero_TDC);
+					fprintf(archivo_sustituto,"%.2f$",puntero_tdc->saldo_TDC);
+					fprintf(archivo_sustituto,"%.2f\n",puntero_tdc->adeudo_TDC);
+				}
+
+				fclose(archivo_sustituto);
+			}
+		}		
+		fgets(traer_cadena,45,archivo_copiar);
+		token=strtok(traer_cadena,"$");
+	}
+
+	contador=1;
+	compra_realizado=1;
+	primera_vez=1;	
+
+	fclose(archivo_copiar);
+	remove(nombre_archivo);
+	rename("temporal.txt",nombre_archivo);
+	printf("\nGracias por tu compra . . .\n");
+	printf("Vuelve pronto . . .\n");
+	system("pause");
+	exit(EXIT_SUCCESS);
+}
+
+
+void valor_compra(long _tarjeta){
+	float saldo_limite=puntero_tdc->saldo_TDC;
+	float saldo_actual=saldo_limite-puntero_tdc->adeudo_TDC;
+	float gasto;
+	float gasto_final=0;
+	int opcion_compra;
+	
+	do{
+
+		system("cls");
+		printf("\t\tSistema de compra\n\n");
+		printf("1-Liverpool\n");
+		printf("2-Apple\n");
+		printf("3-Home Depot\n");
+		printf("4-Nutrisa\n");
+		printf("5-Salir\n");
+		printf("Elige una tienda:");
+		scanf("%d",&opcion_compra);
+		switch(opcion_compra){
+			case 1:
+				gasto=compra_liverpool(saldo_actual);
+				break;
+			case 2:
+				gasto=compra_apple(saldo_actual);
+				break;
+			case 3:
+				gasto=compra_home_depot(saldo_actual);
+				break;
+			case 4:
+				gasto=compra_nutrisa(saldo_actual);
+				break;
+			case 5:
+				gasto=0;
+				break;
+			default:
+				gasto=0;
+				printf("Opción no encontrada . . .\n");
+				system("pause");
+				break;
+
+		}
+		saldo_actual=saldo_actual-gasto;
+		gasto_final+=gasto;
+
+	}while(opcion_compra!=5);
+	puntero_tdc->adeudo_TDC+=gasto_final;
+}
+
+
+float compra_liverpool(float _saldo){
+	float pago=0;
+	float articulo=0;
+	int meses,articulo_liverpool;
+	float porcentaje=0;
+	float pago_final;
+	do{
+		system("cls");
+		printf("\t\tTIENDA LIVERPOOL\n\n");
+		printf("\t\tTu saldo actual: %.2f\n\n",_saldo);
+		printf("1-Playera $230.50\n");
+		printf("2-Pantalón $560.00\n");
+		printf("3-Perfume $1050.00\n");
+		printf("4-Tenis $2500.00\n");
+		printf("5-Salir\n");
+		printf("Elige algo que quieras comprar:");
+		scanf("%d",&articulo_liverpool);
+		switch(articulo_liverpool){
+			case 1:
+				articulo+=230.50;
+				printf("\nPlayer agregada con exito al carrito . .\n");
+				getch();
+				break;
+			case 2:
+				articulo+=560.00;
+				printf("\nPantalón agregado con exito al carrito . .\n");
+				getch();
+				break;
+			case 3:
+				articulo+=1050.00;
+				printf("\nPerfume agregado con exito al carrito . .\n");
+				getch();
+				break;
+			case 4:
+				articulo+=2500.00;
+				printf("\nTenis agregados con exito al carrito . .\n");
+				getch();
+				break;
+			case 5:
+				articulo+=0;
+				break;
+			default:
+				printf("\nProducto no existente . . .\n");
+				system("pause");
+				break;
+		}
+	}while(articulo_liverpool!=5);
+	pago=articulo;
+	if(_saldo>pago){
+		int meses_pagar;
+		if(pago>0){
+			printf("\n\n1-.3 meses\n");
+			printf("2-.6 meses\n");
+			printf("3-.9 meses\n");
+			printf("Elige a cuantos meses quieres pagar:");
+			scanf("%d",&meses_pagar);
+			switch(meses_pagar){
+			case 1:
+				meses=3;
+				porcentaje=0.06;
+				break;
+			case 2:
+				meses=6;
+				porcentaje=0.12;
+				break;
+			case 3:
+				meses=9;
+				porcentaje=0.18;
+				break;
+			default:
+				printf("\nNinguna opción escogida. . .\n");
+				printf("Sera de contado . . .\n");
+				system("pause");
+				meses=1;
+				porcentaje=1;
+				break;
+			}
+			pago_final=meses_si(pago,meses,porcentaje);
+		}
+		else{
+			printf("\n\nNo realizaste compras en la tienda . . .\n");
+			printf("Vuelve pronto . . .\n");
+			system("pause");
+		}
+	}
+
+	else{
+		printf("No te alcanza para todo eso . . \n");
+		printf("Lo siento . . . Vuelve pronto\n");
+		system("pause");
+		pago=0;
+		return pago;
+	}
+	return pago_final;
+}
+
+
+
+float compra_apple(float _saldo){
+	float pago=0;
+	float articulo=0;
+	int meses,articulo_apple;
+	float porcentaje=0;
+	float pago_final;
+	do{
+		system("cls");
+		printf("\t\tTIENDA APPLE\n\n");
+		printf("\t\tTu saldo actual: %.2f\n\n",_saldo);
+		printf("1-Iphone XR $7,000.50\n");
+		printf("2-Iphone 11 $8,500.00\n");
+		printf("3-Laptop Air Max $22,000.00\n");
+		printf("4-Apple Watch $5,000.00\n");
+		printf("5-Salir\n");
+		printf("Elige algo que quieras comprar:");
+		scanf("%d",&articulo_apple);
+		switch(articulo_apple){
+			case 1:
+				articulo+=7000.50;
+				printf("\nIphone XR agregado con exito al carrito . .\n");
+				getch();
+				break;
+			case 2:
+				articulo+=8500.00;
+				printf("\nIphone 11 agregado con exito al carrito . .\n");
+				getch();
+				break;
+			case 3:
+				articulo+=22000.00;
+				printf("\nLaptop Air Max agregado con exito al carrito . .\n");
+				getch();
+				break;
+			case 4:
+				articulo+=5000.00;
+				printf("\nApple Watch agregado con exito al carrito . .\n");
+				getch();
+				break;
+			case 5:
+				articulo+=0;
+				break;
+			default:
+				printf("\nProducto no existente . . .\n");
+				system("pause");
+				break;
+		}
+	}while(articulo_apple!=5);
+	pago=articulo;
+	if(_saldo>pago){
+		int meses_pagar;
+		if(pago>0){
+			printf("\n\n1-.3 meses\n");
+			printf("2-.6 meses\n");
+			printf("3-.9 meses\n");
+			printf("Elige a cuantos meses quieres pagar:");
+			scanf("%d",&meses_pagar);
+			switch(meses_pagar){
+			case 1:
+				meses=3;
+				porcentaje=0.06;
+				break;
+			case 2:
+				meses=6;
+				porcentaje=0.12;
+				break;
+			case 3:
+				meses=9;
+				porcentaje=0.18;
+				break;
+			default:
+				printf("\nNinguna opción escogida. . .\n");
+				printf("Sera de contado . . .\n");
+				system("pause");
+				meses=1;
+				porcentaje=1;
+				break;
+			}
+			pago_final=meses_si(pago,meses,porcentaje);
+		}
+		else{
+			printf("\n\nNo realizaste compras en la tienda . . .\n");
+			printf("Vuelve pronto . . .\n");
+			system("pause");
+		}
+	}
+
+	else{
+		printf("No te alcanza para todo eso . . \n");
+		printf("Lo siento . . . Vuelve pronto\n");
+		system("pause");
+		pago=0;
+		return pago;
+	}
+	return pago_final;	
+}
+
+
+
+float compra_home_depot(float _saldo){
+	float pago=0;
+	float articulo=0;
+	int meses,articulo_homedepot;
+	float porcentaje=0;
+	float pago_final;
+	do{
+		system("cls");
+		printf("\t\tTIENDA HOME DEPOT\n\n");
+		printf("\t\tTu saldo actual: %.2f\n\n",_saldo);
+		printf("1-Sala $6500.00\n");
+		printf("2-Lavabo $2000.00\n");
+		printf("3-Refrigerador $5700.00\n");
+		printf("4-Pintura $700.00\n");
+		printf("5-Salir\n");
+		printf("Elige algo que quieras comprar:");
+		scanf("%d",&articulo_homedepot);
+		switch(articulo_homedepot){
+			case 1:
+				articulo+=6500.00;
+				printf("\nSala agregada con exito al carrito . .\n");
+				getch();
+				break;
+			case 2:
+				articulo+=2000.00;
+				printf("\nLavabo agregado con exito al carrito . .\n");
+				getch();
+				break;
+			case 3:
+				articulo+=5700.00;
+				printf("\nRefrigerador agregado con exito al carrito . .\n");
+				getch();
+				break;
+			case 4:
+				articulo+=700.00;
+				printf("\nPintura agregados con exito al carrito . .\n");
+				getch();
+				break;
+			case 5:
+				articulo+=0;
+				break;
+			default:
+				printf("\nProducto no existente . . .\n");
+				system("pause");
+				break;
+		}
+	}while(articulo_homedepot!=5);
+	pago=articulo;
+	if(_saldo>pago){
+		int meses_pagar;
+		if(pago>0){
+			printf("\n\n1-.3 meses\n");
+			printf("2-.6 meses\n");
+			printf("3-.9 meses\n");
+			printf("Elige a cuantos meses quieres pagar:");
+			scanf("%d",&meses_pagar);
+			switch(meses_pagar){
+			case 1:
+				meses=3;
+				porcentaje=0.06;
+				break;
+			case 2:
+				meses=6;
+				porcentaje=0.12;
+				break;
+			case 3:
+				meses=9;
+				porcentaje=0.18;
+				break;
+			default:
+				printf("\nNinguna opción escogida. . .\n");
+				printf("Sera de contado . . .\n");
+				system("pause");
+				meses=1;
+				porcentaje=1;
+				break;
+			}
+			pago_final=meses_si(pago,meses,porcentaje);
+		}
+		else{
+			printf("\n\nNo realizaste compras en la tienda . . .\n");
+			printf("Vuelve pronto . . .\n");
+			system("pause");
+		}
+	}
+
+	else{
+		printf("No te alcanza para todo eso . . \n");
+		printf("Lo siento . . . Vuelve pronto\n");
+		system("pause");
+		pago=0;
+		return pago;
+	}
+	return pago_final;
+}
+
+
+float compra_nutrisa(float _saldo){
+	float pago=0;
+	float articulo=0;
+	int meses,articulo_nutrisa;
+	float porcentaje=0;
+	float pago_final;
+	do{
+		system("cls");
+		printf("\t\tTIENDA NUTRISA\n\n");
+		printf("\t\tTu saldo actual: %.2f\n\n",_saldo);
+		printf("1-Helado $40.00\n");
+		printf("2-Agua $20.00\n");
+		printf("3-Paleta de hielo $25.00\n");
+		printf("4-Dulces $22.00\n");
+		printf("5-Salir\n");
+		printf("Elige algo que quieras comprar:");
+		scanf("%d",&articulo_nutrisa);
+		switch(articulo_nutrisa){
+			case 1:
+				articulo+=40.00;
+				printf("\nHelado agregada comn exito al carrito . .\n");
+				getch();
+				break;
+			case 2:
+				articulo+=20.00;
+				printf("\nAgua agregado con exito al carrito . .\n");
+				getch();
+				break;
+			case 3:
+				articulo+=25.00;
+				printf("\nPaleta de hielo agregado con exito al carrito . .\n");
+				getch();
+				break;
+			case 4:
+				articulo+=22.00;
+				printf("\nDulces agregados con exito al carrito . .\n");
+				getch();
+				break;
+			case 5:
+				articulo+=0;
+				break;
+			default:
+				printf("\nProducto no existente . . .\n");
+				system("pause");
+				break;
+		}
+	}while(articulo_nutrisa!=5);
+	pago=articulo;
+	if(_saldo>pago){
+		int meses_pagar;
+		if(pago>0){
+			printf("\n\n1-.3 meses\n");
+			printf("2-.6 meses\n");
+			printf("3-.9 meses\n");
+			printf("Elige a cuantos meses quieres pagar:");
+			scanf("%d",&meses_pagar);
+			switch(meses_pagar){
+			case 1:
+				meses=3;
+				porcentaje=0.06;
+				break;
+			case 2:
+				meses=6;
+				porcentaje=0.12;
+				break;
+			case 3:
+				meses=9;
+				porcentaje=0.18;
+				break;
+			default:
+				printf("\nNinguna opción escogida. . .\n");
+				printf("Sera de contado . . .\n");
+				system("pause");
+				meses=1;
+				porcentaje=1;
+				break;
+			}
+			pago_final=meses_si(pago,meses,porcentaje);
+		}
+		else{
+			printf("\n\nNo realizaste compras en la tienda . . .\n");
+			printf("Vuelve pronto . . .\n");
+			system("pause");
+		}
+	}
+
+	else{
+		printf("No te alcanza para todo eso . . \n");
+		printf("Lo siento . . . Vuelve pronto\n");
+		system("pause");
+		pago=0;
+		return pago;
+	}
+	return pago_final;
+}
+
+
+
+float meses_si(float _pago,int meses,float _porcentaje){
+	float mensualidad;
+	float aux;
+	float pago_interes;
+	printf("\n\nTú compra fue de:%.2f\n",_pago);
+	printf("Elegiste pagar a %d meses\n",meses);
+	if(meses==1){
+		pago_interes=_pago;
+		printf("Pagaras de contado . . .\n");
+		system("pause");
+	}
+	else{
+		aux=_pago*_porcentaje;
+		pago_interes=_pago+aux;
+		mensualidad=pago_interes/meses;
+		printf("Pago con intereses:%.2f\n",pago_interes);
+		printf("Tus mensualidades seran de:%.2f\n",mensualidad);
+		system("pause");
+	}
+	return pago_interes;
+}
+
+
+
+
+void ver_saldo_tdc(){
+	char cadena_tdc[45];
+	char caracter_tdc;
+	int x=2;
+	int y=6;
+	int z=60;
+	int w=3;
+	int primera=1;
+	bool salto=false;
+	system("cls");
+	gotoxy(17,2); printf("Tarjetas De Credito");
+	gotoxy(2,4); printf("Numero de tarjeta");
+	gotoxy(25,4); printf("Saldo max.");
+	gotoxy(46,4); printf("Adeudo");
+	strcat(nombre,".txt");
+	FILE *archivo;
+	archivo=fopen(nombre,"r");
+	if(archivo==NULL){
+		printf("ERROR . . .");
+		exit(1);
+	}
+	strtok(nombre,".txt");
+	do{
+		salto=false;
+		if(primera==1){
+			while(caracter_tdc!='\n'){
+				caracter_tdc=fgetc(archivo);
+				gotoxy(z,w); printf("%c",caracter_tdc);
+				primera=2;
+				z++;
+			}
+		}
+		do{
+			if(caracter_tdc=='$'){
+				x+=12;
+				gotoxy(x,y); printf("%c",caracter_tdc);
+				caracter_tdc=fgetc(archivo);
+			}
+			else if(caracter_tdc=='\n'){
+				salto=true;
+			}
+			else{
+				gotoxy(x,y); printf("%c",caracter_tdc);
+				x++;
+				caracter_tdc=fgetc(archivo);
+			}
+		}while(salto==false);
+		y++;
+		x=2;
+		caracter_tdc=fgetc(archivo);
+	}while(!feof(archivo));
+	fclose(archivo);
+	tabla_tdc(x,y);
+	primera=1;
+	gotoxy(1,y+4); system("pause");
+}
+
+void tabla_tdc(int _x,int _y){
+	int x=1,y=1;
+	
+
+	for (int i = 1; i <= 54; ++i)
+	{
+		gotoxy(x,y); printf("=");
+		gotoxy(x,y+2); printf("=");			//Dibuja las lineas horizontales del cuadro 
+		gotoxy(x,y+4); printf("=");
+		gotoxy(i,_y+1); printf("=");
+		x++;
+	}
+	for (int i = 2; i < _y+1; ++i)
+	{
+		gotoxy(1,i); printf("|");				//Dibuja las lineas verticales del cuadro
+		gotoxy(54,i); printf("|");
+	}
+	for (int i = 6; i <=_y; ++i)
+	{
+		gotoxy(22,i); printf("|");
+		gotoxy(37,i); printf("|");		//dibuja la linea de separacion del nombre y edad
+	}
+	gotoxy(22,4); printf("|");
+	gotoxy(37,4); printf("|");		//dibuja la linea de separacion del nombre edad(cabecero)
+
+	
+}
+
+
+
+void menu_administrativo(){						//funcion menu administrativo
+	int opcion_administrativa;
+	do{
+
+		system("cls");
+		printf("\tSistema Bancario\n\n\n");
+		printf("Apartado administrativo\n\n");			//menu del area administrativa 
+		printf("1-Registar un cliente\n");
+		printf("2-Registrar una cuenta\n");
+		printf("3-Ver clientes\n");
+		printf("4-Ver cuentas\n");
+		printf("5-Salir\n");
+		printf("Ingresa una opción:");
+		scanf("%d",&opcion_administrativa);				//usuario ingresa una opcion
+
+		switch(opcion_administrativa){			//multi opciones 
+		case 1:
+			registrar_cliente();			//llama a funcion
+			break;
+		case 2:
+			registrar_cuenta();			//llama a funcion
+			break;
+		case 3:
+			ver_clientes();				//llama a funcion
+			break;
+		case 4:
+			ver_cuentas();				//llama a funcion
+			break;
+		case 5:
+			break;
+		default:
+			printf("\nOpción incorrecta..!!\n");			//texto por defecto
+			system("pause");
+			break;		
+		}
+	}while(opcion_administrativa!=5);			//bucle hasta que la opcion ingresada sea 5
+
+}
+
+
+void registrar_cliente(){		//funcion registrar cliente
+	bool continuar=false;		//declaracion de varibles
+	char comprobacion;
+	do{	
+		system("cls");		
+		fflush(stdin);		//limpiando el buffer para poder almacenar mas usuarios
+		printf("Registro de cliente\n");		//impresion de texto
+		printf("\n\nIngresa nombre:");
+		fgets(puntero_cliente->nombre,40,stdin);	/*deja ingresar una cadena de 40 caracteres y se guardara en un objeto de la
+														estructura usuario*/
+		printf("Ingresa edad:");					
+		scanf("%d",&puntero_cliente->edad);		//se guarda la edad en la variable edad de la estructura de los usuarios
+		
+		printf("\n\nDatos del nuevo usuario:\n\n");
+		printf("Nombre:%s",puntero_cliente->nombre);		//impresion de los datos del usuario 
+		printf("Edad:%d\n",puntero_cliente->edad);
+		printf("\nLa informacion es correcta? s/n:");		/*comprueba si la informacion ingresada es correcta en caso de escoger
+															n volver a pedir los datos del usuario para guardarlo*/
+		scanf("%s",&comprobacion);
+		
+		comprobacion=tolower(comprobacion);
+		
+		if(puntero_cliente->edad<18&&comprobacion=='s'){
+			printf("Usuario menor de 18 . . .\n");
+			printf("Denegado . . .\n");
+			system("pause\n");
+			exit(1);
+		}
+
+
+		if (comprobacion=='s')
+		{
+			continuar=true;
+			printf("Usuario registrado correctamente . . .\n");
+			system("pause");
+		}
+		else{
+			printf("Favor de colocar los datos nuevamete . .\n");
+			system("pause");
+		}
+	}while(continuar==false);
+
+	FILE *archivo;
+	archivo=fopen("CLIENTES.txt","a+");
+	if(archivo==NULL){
+		printf("Estamos teniendo problemas de sistema . . .\n");
+		printf("Intentar mas tarde . .\n");
+		system("pause");
+		exit(1);
+	}
+	if(ftell(archivo)==0){
+		fprintf(archivo,"*\n");
+	}
+
+	strtok(puntero_cliente->nombre,"\n");
+	fprintf(archivo,"%s",puntero_cliente->nombre);
+
+
+	fprintf(archivo,"%d\n",puntero_cliente->edad);
+	fflush(archivo);
+	fclose(archivo);
+	printf("\nUsuario registrado en nuestra base de datos . . .\n");
+	system("pause");
+}
+
+
+void registrar_cuenta(){
+	
+	bool continuar=false;		//declaracion de variables
+	char comprobacion;	
+	system("cls");
+	fflush(stdin);				//limpia el buffer y permite nueva entrada 
+	printf("Registro de cuenta\n");
+	printf("\n\nIngresa nombre de usuario:");
+	fgets(puntero_cliente->nombre,40,stdin);		//pide ingresar al usuario el nombre de usuario					
+	strtok(puntero_cliente->nombre,"\n");			//quita el salto de linea para la comparacion entre cadenas
+	int comprobacion_long=strlen(puntero_cliente->nombre); //variable para verificar que se escriba el nombre completo
+	if(comprobacion_long<17){									//el nombre mas corte del mundo es de 17, asi que tiene si hay un nombre menor a 17 marcara error
+		printf("\n\nFavor de escribir el nombre completo . . .\n");
+		system("pause");
+	}
+	else{
+		FILE *archivo;								//crea un puntero de tipo archivo,para guardar la informacion
+		archivo=fopen("CLIENTES.txt","r");				//abre un archivo llamado clientes de tipo lectura solamente,el archivo ya debe existir			
+		if(archivo==NULL){					//verifica que no haya errores con el archivo
+			printf("Estamos teniendo problemas de sistema . . .\n");
+			printf("Intentar mas tarde . .\n");			//manda msj de error en caso de no encontrarlo o tener alguna falla
+			system("pause");
+			exit(1);									//finaliza con exit 1 para señalar que ocurrio algun error
+		}
+
+		bool usuario_existente=false;					//tipo de dato para verificar que existe el nombre
+		while(!feof(archivo)){							//mientras el archivo siga teniendo informacion este seguira buscando el nombre
+			int lon=strlen(puntero_cliente->nombre);		//generamos una variable para leer la longitud del nombre que vamos a buscar
+			char palabra[lon+1];								//le aumentamos un valor a lon para que lea el hueco vacio
+			fgets(palabra,lon+1,archivo);						//guarda la palabra sacada del archivo de texto
+			if(strcmp(palabra,puntero_cliente->nombre)==0){				//si los nombres son iguales se realizan las instrucciones
+				usuario_existente=true;							//asignamos el valor para verificar que el nombre es el mismo
+				break;
+			}					  	
+		}
+		fflush(archivo);
+		fclose(archivo);
+		if(usuario_existente==true){								//si el usuario existe entra a la condicional
+				int aceptado;		
+				aceptado=datos_usuario();							//se le asigna el valor que regrese la funcion datos_usuarios
+				if(aceptado==1){									//en caso de retornar 1 se le asignara un numero de tarjerta al usuario
+					srand(time(NULL));									//genera numero aleatorio con respecto al tiempo
+					puntero_cuenta->numero_tarjeta_credito=rand() % 1999999999 + 1010000000; 	//guarda el numero en el puntero de cuenta
+					puntero_cliente->ID=rand() % 9999;
+					bool contra=false;
+					do{	
+						system("cls");
+						printf("Ingresa una contraseña para tu cuenta . . .\n");
+						printf("Debe ser de 8 caracteres\n");
+						printf("Contraseña:");
+						scanf("%s",&puntero_cliente->contrasena);
+						int longitud=strlen(puntero_cliente->contrasena);
+						if(longitud>=8){
+							contra=true;
+						}
+						else{
+							contra=false;
+							printf("\n\nLa contraseña es menor a 8 caracteres . . .\n");
+							printf("Intenta de nuevo . . .\n");
+							system("pause");
+						}
+					}while(contra==false);
+					
+					FILE *archivo_clientes;														//generamos una variable  de tipo puntero
+					archivo_clientes=fopen("CUENTAS.txt","a+");									//le decimos que abra un archivo con tal nombre y que sea de lectura y escritura
+					if(archivo_clientes==NULL){													//si no ecuentra el archivo genera error
+						printf("Estamos teniendo problemas de sistema . . .\n");
+						printf("Intentar mas tarde . .\n");									//mensaje de error generado
+						system("pause");
+						exit(1);															//cierra la ejecución diciendo que ocurrio un error al compilador
+					}
+					if(ftell(archivo_clientes)==0){
+						fprintf(archivo_clientes,"*\n");
+					}
+					fprintf(archivo_clientes,"%s",puntero_cliente->nombre);						//imprime en el archivo de texto el nombre
+					fprintf(archivo_clientes,"%ld\n",puntero_cuenta->numero_tarjeta_credito);		//imprime en el archivo de texto el numero de tarjeta
+					system("cls");
+					printf("\nCuenta regitrada al usuario. . .\n\n");					//mensaje de que se ha guarda en el archivo correctamente
+					printf("ID:%.4d\n",puntero_cliente->ID);
+					printf("Nombre:%s\n",puntero_cliente->nombre);
+					printf("Número de cuenta del usuario:%ld\n",puntero_cuenta->numero_tarjeta_credito);
+					printf("Contraeña:%s\n",&puntero_cliente->contrasena);
+					printf("Monto maximo otorgado:$%.2f\n\n",puntero_cuenta->cantidad);
+					generador_archivo_cuenta();
+					generador_archivo_contraycuenta();
+					system("pause");					
+					fflush(archivo_clientes);									//limpia el buffer
+					fclose(archivo_clientes);									//cierra el archivo de texto que abrimos anteriormente
+				}
+				else{											//condición en caso de que el usuario haya sido denegado para tener una tarjeta
+					system("cls");
+					printf("\n\nNombre:%s\n",puntero_cliente->nombre);
+					printf("\n\nUsuario denegado . . .\n\n");			
+					system("pause");
+				}
+		}
+		else{
+			printf("\n\nNombre no encontrado en nuestro sistema . . .\n");				//mensaje de texto en caso de no encontrar el nombre de usuario
+			system("pause");
+			exit(1);
+		}
+	}		
+}
+
+
+void ver_clientes(){
+	
+	int x,y;
+	char nombre_arreglo;		//declaracion de variables
+	char detectar;
+	int contador=1;
+	system("cls"); //limpiar pantalla
+	gotoxy(13,2);printf("Clientes Registrados");	//muestra el texto ingresado
+	gotoxy(2,4);printf("NOMBRE");		//muestra el texto nombre
+	gotoxy(40,4);printf("EDAD");		//muestra texto
+	FILE *archivo;						//generamos un puntero llamado archivo para controlar un archivo
+	archivo=fopen("CLIENTES.txt","r");				//abre o crea un archivo llamado clientes y se le asigna "r" para leer e ingresar datos
+	if(archivo==NULL){							//comprueba si el archivo se abrio correctamente o se encontro
+		printf("Estamos teniendo problemas de sistema . . .\n");		//manda msj de error en caso de que hubiera fallo alguno
+		printf("Intentar mas tarde . .\n");
+		system("pause");
+		exit(1);							//finaliza con un exit(1) indicando que ocurrio algun error
+	}
+	x=2;			//genera un valor a las coordenada para la impresion de los datos
+	y=5;			//tanto en x como en y
+
+	do{
+
+		nombre_arreglo=fgetc(archivo);		//pasa caracter por caracter a la variable nombre arreglo
+		detectar=nombre_arreglo;				//detectar se usara para ver si hay saltos de linea
+		
+		if(isdigit(nombre_arreglo)){			//inspecciona si ve algun numero en la cadena (edad)
+			if(contador==1){					//si el contador es 1 posiciona el cursor en coordenada x & y, 
+				gotoxy(42,y);
+				contador++; 					//aumenta el contador para no imprimir texto encimado
+			}
+			else{
+				gotoxy(43,y);				//posiciona el siguiente numero en la posicion siguiente de x
+			}
+
+		}
+
+		if(detectar=='\n'){					//usado para detectar un salto de linea y no encimar el texto
+			y++;							//incrementa y para hacer el salto de texto despues de imprimir la edad del usuario
+			printf("%c",nombre_arreglo);			//imprime caracter por caracter hasta detectar un salto de linea
+			gotoxy(x,y);	
+			contador=1;						//reseteamos el contador para usarlo en la siguiente linea de texto
+		}
+		else{
+			printf("%c",nombre_arreglo);		//en caso de no haber salto de linea sigue imprimiendo los caracteres normalemente
+		}
+
+	}while(!feof(archivo));				//bucle hasta que "feof" identifique que ha terminado de leer todo el contenido del texto
+	valor_x_global=x;
+	valor_y_global=y;
+	dibujar_tabla();					//dibuja una tabla con coordenadas x & y
+	gotoxy(2,valor_y_global+5);
+					
+	system("pause");
+	fclose(archivo);					//cierra el archivo utilizado
+}
+
+
+
+
+void ver_cuentas(){
+	int x,y;
+	char nombre_arreglo;		//declaracion de variables
+	char detectar;
+	int contador=1;
+	system("cls"); //limpiar pantalla
+	gotoxy(13,2);printf("Cuentas Registradas");	//muestra el texto ingresado
+	gotoxy(2,4);printf("NOMBRE");		//muestra el texto nombre
+	gotoxy(38,4);printf("CUENTA");		//muestra texto
+	FILE *archivo_cuentas;						//generamos un puntero llamado archivo para controlar un archivo
+	archivo_cuentas=fopen("CUENTAS.txt","r");				//abre o crea un archivo llamado clientes y se le asigna "r" para leer e ingresar datos
+	if(archivo_cuentas==NULL){							//comprueba si el archivo se abrio correctamente o se encontro
+		printf("Estamos teniendo problemas de sistema . . .\n");		//manda msj de error en caso de que hubiera fallo alguno
+		printf("Intentar mas tarde . .\n");
+		system("pause");
+		exit(1);							//finaliza con un exit(1) indicando que ocurrio algun error
+	}
+	x=2;			//genera un valor a las coordenada para la impresion de los datos
+	y=5;			//tanto en x como en y
+	int aux=36;
+	do{
+
+		nombre_arreglo=fgetc(archivo_cuentas);		//pasa caracter por caracter a la variable nombre arreglo
+		detectar=nombre_arreglo;				//detectar se usara para ver si hay saltos de linea
+		
+		if(isdigit(nombre_arreglo)){			//inspecciona si ve algun numero en la cadena (numero de cuenta)
+			if(contador>=1){					//si el contador es 1 posiciona el cursor en coordenada x & y, 
+				gotoxy(aux,y);
+				contador++; 					//aumenta el contador para no imprimir texto encimado
+				aux++;
+			}
+		}
+
+		if(detectar=='\n'){					//usado para detectar un salto de linea y no encimar el texto
+			y++;							//incrementa y para hacer el salto de texto despues de imprimir la edad del usuario
+			printf("%c",nombre_arreglo);			//imprime caracter por caracter hasta detectar un salto de linea
+			gotoxy(x,y);	
+			contador=1;						//reseteamos el contador para usarlo en la siguiente linea de texto
+			aux=36;
+		}
+		else{
+			printf("%c",nombre_arreglo);		//en caso de no haber salto de linea sigue imprimiendo los caracteres normalemente
+		}
+
+	}while(!feof(archivo_cuentas));				//bucle hasta que "feof" identifique que ha terminado de leer todo el contenido del texto
+	valor_x_global=x;
+	valor_y_global=y;
+	dibujar_tabla_cuentas();					//dibuja una tabla con coordenadas x & y
+	gotoxy(2,valor_y_global+5);
+					
+	system("pause");
+	fclose(archivo_cuentas);
+}
+
+int  datos_usuario(){
+
+
+	int opciones_ocupacion;
+	int ocupacion;
+	int sueldo;
+	int puntos;
+	do{	
+		system("cls");
+		printf("Nombre:%s\n\n",puntero_cliente->nombre);
+		printf("\t\tOcupación y Salario\n\n");
+		printf("Presiona 0 para salir\n");
+		printf("Presiona 1 para desplegar las opciones:");
+		scanf("%d",&opciones_ocupacion);
+		switch(opciones_ocupacion){
+			case 0:
+				return 0; 			//sale del programa y manda un 0 para no aceptarle el credito
+
+			case 1:	
+				printf("\n\n1-Profesor\n"); 		//2+   1 y 5 y 9
+ 				printf("2-Ingeniero\n");			//6+   solo
+				printf("3-Doctor\n");				//3+  3 y 6
+				printf("4-Vendedor\n");				//1+   solo
+				printf("5-Policia\n");				//2+   ya
+				printf("6-Bombero\n");				//3+  ya 
+				printf("7-Futbolista Profesional\n");	//5+  solo
+				printf("8-Sin empleo\n");			//0   solo
+				printf("9-Otro\n");					//2+  ya
+				printf("Ingresa la ocupación que tengas:");
+				scanf("%d",&ocupacion);
+				
+				switch(ocupacion){
+				
+					case 1:
+						puntos=2;
+						break;
+					case 2:
+						puntos=6;
+						break;
+					case 3:
+						puntos=3;
+						break;
+					case 4:
+						puntos=1;
+						break;
+					case 5:
+						puntos=2;
+						break;
+					case 6:
+						puntos=3;
+						break;
+					case 7:
+						puntos=5;
+						break;
+					case 8:
+						return 0;
+						break;
+					case 9:
+						puntos=2;
+						break;
+					default:
+						return 0;
+				}
+				printf("\n\n1-$0<->3900\n");
+				printf("2-$4000<->6000\n");
+				printf("3-$6001<->10,000\n");
+				printf("4-$10,001<->20,000\n");
+				printf("5-$20,001<->50,000\n");
+				printf("6-$50,001<->100,000\n");
+				printf("7-$->100,001\n");
+				printf("¿Cúanto es tu sueldo mensual:");
+				scanf("%d",&sueldo);
+
+				switch(sueldo){
+					case 1:
+						return 0;
+						break;
+					case 2:
+						return 0;
+						break;
+					case 3:
+						puntero_cuenta->cantidad=(6001.00/2.00)*puntos;
+						break;
+					case 4:
+						puntero_cuenta->cantidad=(10001.00/2.00)*puntos;
+						break;
+					case 5:
+						puntero_cuenta->cantidad=(20001.00/2.00)*puntos;
+						break;
+					case 6:
+						puntero_cuenta->cantidad=(50001.00/2.00)*puntos;
+						break;
+					case 7:
+						puntero_cuenta->cantidad=(100001.00/2.00)*puntos;
+						break;
+					default:
+						return 0;
+				}
+				break;
+			dafault:
+				printf("Opción ingresada incorrecta . . .");
+				break;
+		}
+	}while(opciones_ocupacion!=1);
+	return 1;
+}
+
+void generador_archivo_cuenta(){
+	int lon=strlen(puntero_cliente->nombre);
+	char nombre[]=".txt";
+	char *documento;
+	documento=(char*)malloc(sizeof(char)*lon);
+	documento=puntero_cliente->nombre;
+	strcat(documento,nombre);
+	FILE *archivo_generador;
+	archivo_generador=fopen(documento,"a+");
+	if(archivo_generador==NULL){
+		printf("Estamos teniendo problemas de sistema . . .\n");		//manda msj de error en caso de que hubiera fallo alguno
+		printf("Intentar mas tarde . .\n");
+		system("pause");
+		exit(1);
+	}
+	fseek(archivo_generador,0, SEEK_END);
+	if(ftell(archivo_generador)==0){
+		strtok(documento,".txt");
+		fprintf(archivo_generador,"%s\n",documento);
+		//strtok(puntero_cliente->nombre,".txt");
+		//fprintf(archivo_generador,"%s\n",puntero_cliente->nombre);
+	}
+	puntero_cuenta->adeudo=0.00;
+	fprintf(archivo_generador,"%ld",puntero_cuenta->numero_tarjeta_credito);
+	fprintf(archivo_generador,"$%.2f",puntero_cuenta->cantidad);
+	fprintf(archivo_generador,"$%.2f\n",puntero_cuenta->adeudo);
+	free(documento);
+	fclose(archivo_generador);
+}
+void generador_archivo_contraycuenta(){
+	FILE *archivo;
+	archivo=fopen("Contraseñas.txt","a+");
+	if(archivo==NULL){
+		printf("Estamos teniendo problemas de sistema . . .\n");		//manda msj de error en caso de que hubiera fallo alguno
+		printf("Intentar mas tarde . .\n");
+		system("pause");
+		exit(1);	
+	}
+	fprintf(archivo,"%ld",puntero_cuenta->numero_tarjeta_credito);
+	fprintf(archivo,"%s\n",puntero_cliente->contrasena);
+	fflush(archivo);
+	fclose(archivo);
+}
+
+void gotoxy(int x,int y){		//funcion para controlar la posicion en pantalla
+
+	HANDLE hcon;					//generar una variable a la pantalla
+	hcon=GetStdHandle(STD_OUTPUT_HANDLE); //la pocision en la pantalla se puede modificar 		
+	COORD dwp;	//asignas un nombre a la cordenada
+	dwp.X=x;		//igualas una variable a la coordenada x
+	dwp.Y=y;		//igualas una variable a la coordenada y
+	SetConsoleCursorPosition(hcon,dwp);		/*permite posicionar el cursor en la posicion deseada en 
+											base a las coordenadas x,y; y a la pantalla*/
+}
+
+
+void dibujar_tabla(){
+	int x=1,y=1;
+	
+
+	for (int i = 1; i <= 45; ++i)
+	{
+		gotoxy(x,y); printf("=");
+		gotoxy(x,y+2); printf("=");			//Dibuja las lineas horizontales del cuadro 
+		gotoxy(x,y+4); printf("=");
+		gotoxy(i,valor_y_global+1); printf("=");
+		x++;
+	}
+	for (int i = 2; i < valor_y_global+1; ++i)
+	{
+		gotoxy(1,i); printf("|");				//Dibuja las lineas verticales del cuadro
+		gotoxy(45,i); printf("|");
+	}
+	for (int i = 6; i <=valor_y_global; ++i)
+	{
+		gotoxy(35,i); printf("|");		//dibuja la linea de separacion del nombre y edad
+	}
+
+	gotoxy(35,4); printf("|");		//dibuja la linea de separacion del nombre edad(cabecero)
+
+	
+}
+
+void dibujar_tabla_cuentas(){
+	int x=2,y=1;
+	
+
+	for (int i = 1; i <= 45; ++i)
+	{
+		gotoxy(x,y); printf("=");
+		gotoxy(x,y+2); printf("=");			//Dibuja las lineas horizontales del cuadro 
+		gotoxy(x,y+4); printf("=");
+		gotoxy(i,valor_y_global+1); printf("=");
+		x++;
+	}
+	for (int i = 2; i < valor_y_global+1; ++i)
+	{
+		gotoxy(1,i); printf("|");				//Dibuja las lineas verticales del cuadro
+		gotoxy(46,i); printf("|");
+	}
+	for (int i = 6; i <=valor_y_global; ++i)
+	{
+		gotoxy(35,i); printf("|");		//dibuja la linea de separacion del nombre y edad
+	}
+
+	gotoxy(35,4); printf("|");		//dibuja la linea de separacion del nombre edad(cabecero)
+
+}
